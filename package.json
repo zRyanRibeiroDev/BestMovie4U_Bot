@@ -1,0 +1,23 @@
+{
+  "name": "bestmovie4u_bot",
+  "version": "1.0.0",
+  "description": "Projeto de chatbot que irá nos retornar um filme desejado e a plataforma onde pode ser visto.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zRyanRibeiroDev/BestMovie4U_Bot.git"
+  },
+  "author": "Gustavo Schneider, Ryan Ribeiro, Willian Yu Chen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zRyanRibeiroDev/BestMovie4U_Bot/issues"
+  },
+  "homepage": "https://github.com/zRyanRibeiroDev/BestMovie4U_Bot#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.59.0"
+  }
+}
