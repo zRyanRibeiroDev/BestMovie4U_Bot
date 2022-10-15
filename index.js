@@ -4,4 +4,4 @@ const MoviesController = require('./src/controller/movies.js')
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, {polling: true})
 
-const movies = new MoviesController(bot)
+new MoviesController(bot).ouvirMensagens()

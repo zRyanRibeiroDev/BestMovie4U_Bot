@@ -6,33 +6,43 @@ class MoviesController {
 
         this.bot = bot
 
+        // define o comportamento do bot ao ocorrer erro de polling
         bot.on('polling_error', (error) => {
-            console.log(error.code)
+            console.log(error)
         })
 
-        bot.on('message', (msg) => {
+        console.log('O BOT ESTÁ RODANDO!')
+    }
+
+    ouvirMensagens() {
+
+        // define os comportamentos do bot ao receber qualquer tipo de mensagem
+        this.bot.on('message', (msg) => {
 
             // pega o ID do chat que recebeu mensagem
             const chatId = msg.chat.id
 
-            // realiza a apresentação
-            if (this.estados[chatId]?.estado === undefined) {
+            // realiza a apresentação se for primeira vez ou bater timeout
+            if (this.estados[chatId]?.estado === undefined || this.verificarTimeOutChat(chatId)) {
 
-                bot.sendMessage(chatId, this.apresentacao())
+                this.bot.sendMessage(chatId, this.apresentacao())
                 this.atualizarEstadoChat(chatId, 'generos_filme')
             }
 
             // apresenta os generos de filme
             if (this.estados[chatId]?.estado === 'generos_filme') {
 
-                bot.sendMessage(chatId, this.generos())
+                this.bot.sendMessage(chatId, this.generos())
                 this.atualizarEstadoChat(chatId, 'genero_especifico')
             }
 
             // apresenta filmes pelo genero escolhido
             else if (this.estados[chatId]?.estado === 'genero_especifico') {
 
-                bot.sendMessage(chatId, 'boa escolha')
+                // TODO: trocar pros botoes
+
+                // TODO: apresentar primeiramente 3 filmes do genero escolhido
+                this.bot.sendMessage(chatId, 'boa escolha')
             }
 
             //Mensagem de recepção feita pelo bot
@@ -53,7 +63,7 @@ class MoviesController {
             //Nota da crítica
             //Juntamente com a informações de onde podemos assistir(plataformas)
 
-        });
+        })
     }
 
     apresentacao() {
@@ -75,11 +85,9 @@ class MoviesController {
 
     generos() {
 
-        const mensagens = [
-            'Terror',
-            'Comédia',
-            'Ação'
-        ]
+        // TODO: preencher todos generos disponiveis com get na api
+
+        const mensagens = axios.get('https://api.themoviedb.org/3/genre/movie/list?api_key=<<api_key>>&language=pt-BR')
 
         let mensagem = `Selecione um dos generos abaixo de acordo com o seu número respectivo:\n\n`
 
@@ -89,13 +97,27 @@ class MoviesController {
         return mensagem
     }
 
+    verificarTimeOutChat(chatId) {
+
+        const moment = require('moment')
+
+        const formato = 'DD/MM/YYYY HH:mm:ss'
+
+        const atual = moment(moment().format(formato), formato)
+        const antes = moment(this.estados[chatId].horario, formato)
+
+        const diferença = moment.duration(atual.diff(antes)).asSeconds()
+
+        return diferença >= parseInt(process.env.TIMEOUT)
+    }
+
     atualizarEstadoChat(chatId, estado) {
 
         const moment = require('moment')
 
         this.estados[chatId] = {
             estado: estado,
-            horario: moment().format('DDMMyyyyHHmmss')
+            horario: moment().format('DD/MM/YYYY HH:mm:ss')
         }
     }
 }
