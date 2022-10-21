@@ -69,6 +69,7 @@ class MoviesController {
             } while (this.estados[chatId]?.estado === 'generos_filme')
 
             //TODO: Seguir com estado: busca_filmes
+            //    - Delay entre as mensagens
 
             //Mensagem de recepção feita pelo bot
             //Ex: apresentação do bot, pedir para selecionar um gênero de filme
