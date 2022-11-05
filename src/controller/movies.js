@@ -4,6 +4,7 @@ class MoviesController {
 
     estados = {}
     generos = []
+    ano = []
 
     constructor(bot) {
 
@@ -55,7 +56,7 @@ class MoviesController {
                         this.atualizarEstadoChat(chatId, 'genero_invalido')
                     else {
                         this.bot.sendMessage(chatId, `Boa escolha de gênero: ${this.generos[num_genero-1].name}`)
-                        this.atualizarEstadoChat(chatId, 'busca_filmes')
+                        this.atualizarEstadoChat(chatId, 'perguntar_data')
                     }
                 }
 
@@ -68,25 +69,43 @@ class MoviesController {
 
             } while (this.estados[chatId]?.estado === 'generos_filme')
 
-            //TODO: Seguir com estado: busca_filmes
-            //    - Delay entre as mensagens
+            if (this.estados[chatId]?.estado === 'perguntar_data') {
 
-            //Mensagem de recepção feita pelo bot
-            //Ex: apresentação do bot, pedir para selecionar um gênero de filme
+                let ano = texto
 
-            //Ao informar o gênero ele deverá fazer mais algumas perguntas ou simplesmente poderemos deixar
-            //apenas uma informação
+                this.bot.sendMessage(chatId, await this.perguntarData(ano))
 
-            //Alguns tipos de perguntas: 
-            //A do próprio gênero do filme
-            //Atores presentes nele
-            //Filme lançado entre {ano informado} e {ano informado}
+                
+                
+
+
+                
+                
+                //this.atualizarEstadoChat(chatId, 'perguntar_data')
+            }
+
+
+            // TODO: Delay entre as mensagens
+
+            // informa as opcoes:
+            // - intervalo entre duas datas - ano especifico 
+            // retorna 3 filmes dessa data em ordem de popularidade
+            // pergunta se algum desses é do interesse
+            // se sim apresenta dados daquele filme:
+
+            //Breve sinopse 
+            //Nota da crítica
+            //Elenco
             //Faixa etária
             //Possui premiações
+            //diretor
+            //plataforma disponivel
+
+            // se nao apresenta pergunta o que deseja fazer: ver outros ou procurar outro genero
+            
 
             //Em seguida haverá a resposta do bot, onde está presente o que foi solicitado acima
-            //Com uma breve sinopse 
-            //Nota da crítica
+        
             //Juntamente com a informações de onde podemos assistir (plataformas)
         })
     }
@@ -136,6 +155,17 @@ class MoviesController {
             mensagem += `${i + 1} - ${this.generos[i].name}\n`
 
         return mensagem
+    }
+
+    async perguntarData(ano){
+        
+        let mensagem = `Insira uma data que deseja para as recomendações`
+
+        const filme_ano = await get(`
+        https://api.themoviedb.org/3/discover/movie?api_key=f180cab3199d65c035240bcaccebf4c5&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&primary_release_year=${ano}&with_watch_monetization_types=flatrate`)
+        // GET /discover/movie?primary_release_year=2010&sort_by=vote_average.desc
+        return filme_ano
+
     }
 
     /**
