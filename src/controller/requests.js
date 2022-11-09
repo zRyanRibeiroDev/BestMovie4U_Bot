@@ -25,9 +25,7 @@ class RequestsController {
     /**
      * Pega os filmes mais recomendados por genero e data na API do TMDB
      */
-    async buscarPorGeneroData(genero, data) {
-
-        const maximo_filmes = 3
+    async buscarPorGeneroData(genero, data, maximo_filmes = 3) {
 
         let filmes_anos = await this.get(`/discover/movie`, `sort_by=popularity.desc&include_adult=false&include_video=false&page=1&with_genres=${genero}&primary_release_year=${data}`)
 

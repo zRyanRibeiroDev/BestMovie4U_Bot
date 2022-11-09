@@ -119,19 +119,68 @@ class MoviesController {
                 // enquanto não escolher uma data corretamente irá tentar novamente
             } while (this.estados[chatId]?.estado === 'perguntar_data')
 
-            // apresenta recomendacoes de filmes pelo genero escolhido e data 
-            if (this.estados[chatId]?.estado === 'filmes_por_data_genero') {
+            do {
 
-                const dados = {
-                    genero: this.estados[chatId]?.genero,
-                    ano_lancamento: this.estados[chatId]?.ano_lancamento
+                // apresenta recomendacoes de filmes pelo genero escolhido e data 
+                if (this.estados[chatId]?.estado === 'filmes_por_data_genero') {
+
+                    const dados = {
+                        genero: this.estados[chatId]?.genero,
+                        ano_lancamento: this.estados[chatId]?.ano_lancamento
+                    }
+
+                    await this.filmesPorGeneroData(chatId, dados)
+                    this.atualizarEstadoChat(chatId, 'interesse_usuario')
                 }
 
-                await this.filmesPorGeneroData(chatId, dados)
-                this.atualizarEstadoChat(chatId, 'perguntar_interesse_recomendacoes')
-            }
+                // valida a opcao escolhida pelo usuario e age de acordo
+                else if (this.estados[chatId]?.estado === 'interesse_usuario') {
 
-            // continuar com perguntar_interesse_recomendacoes
+                    const regex = /\d+/
+                    const match = regex.exec(texto) || 0
+
+                    const num_opcao = parseInt(match[0])
+
+                    const qntd_filmes = this.estados[chatId].filmes.length
+                    const max_opcoes = qntd_filmes + 2
+
+                    // nao encontrou a opcao desejada devido erro ou preenchimento incorreto do usuario
+                    if (isNaN(num_opcao) || num_opcao > max_opcoes || num_opcao <= 0)
+                        this.atualizarEstadoChat(chatId, 'opcao_interesse_invalida')
+
+                    // quer ver sobre um filme especifico
+                    else if (num_opcao <= qntd_filmes) {
+
+                        // TODO: buscar sobre o filme especifico
+                        this.atualizarEstadoChat(chatId, 'filme_especifico')
+                    }
+
+                    // quer mudar os criterios
+                    else if (num_opcao - 1 === max_opcoes - 1) {
+
+                        await this.recomecarEscolhaCriterios(chatId)
+                        await this.mostrarGeneros(chatId)
+                        this.atualizarEstadoChat(chatId, 'genero_especifico')
+                    }
+
+                    // quer ver mais opcoes de filmes para o genêro e data escolhidos
+                    else {
+
+                        // TODO: buscar mais opcoes de filmes
+                        this.atualizarEstadoChat(chatId, 'filmes_por_data_genero')
+                    }
+                }
+
+                // apresenta mensagem de erro caso a data tenha sido invalida
+                if (this.estados[chatId]?.estado === 'opcao_interesse_invalida') {
+
+                    await this.opcaoInvalida(chatId)
+                    this.atualizarEstadoChat(chatId, 'filmes_por_data_genero')
+                }
+
+            } while (this.estados[chatId]?.estado === 'filmes_por_data_genero')
+
+            // continuar com filme_especifico e filmes_por_data_genero do interesse_usuario
 
             // TODO: Delay entre as mensagens
 
@@ -183,6 +232,14 @@ class MoviesController {
     }
 
     /**
+     * Mensagem de recomeçar a selecionar criterios de genero e data
+     */
+    async recomecarEscolhaCriterios(chatId) {
+
+        await this.enviarMensagem(chatId, `Certo, vamos recomeçar!`)
+    }
+
+    /**
      * Apresenta a lista de generos pro usuario
      */
     async mostrarGeneros(chatId) {
@@ -224,6 +281,7 @@ class MoviesController {
     async perguntarData(chatId) {
 
         await this.enviarMensagem(chatId, 'Insira o ano de lançamento desejado para as recomendações de filmes daquela data.')
+
     }
 
     /**
@@ -242,7 +300,15 @@ class MoviesController {
      */
     async dataInvalida(chatId) {
 
-        await this.enviarMensagem(chatId, 'Parece que você digitou um ano de lançamento incorreto.')
+        await this.enviarMensagem(chatId, `Parece que você digitou um ano de lançamento incorreto.`)
+    }
+
+    /**
+     * Informa um erro na escolha da opção
+     */
+    async opcaoInvalida(chatId) {
+
+        await this.enviarMensagem(chatId, `Parece que você digitou uma opção incorreta.`)
     }
 
     /**
@@ -264,6 +330,10 @@ class MoviesController {
 
             mensagem += `${i + 1} - ${filmes[i].title}\n`
         }
+
+        // adiciona outras opcoes fora os filmes
+        mensagem += `\n${filmes.length + 1} - Ver mais recomendações`
+        mensagem += `\n${filmes.length + 2} - Recomeçar`
 
         await this.enviarMensagem(chatId, mensagem)
     }
