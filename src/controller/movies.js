@@ -153,9 +153,10 @@ class MoviesController {
 
                     // quer ver sobre um filme especifico
                     else if (num_opcao <= qntd_filmes) {
-
-                        // TODO: buscar sobre o filme especifico
                         
+                        // TODO: buscar sobre o filme especifico
+                        await this.filmeEscolhido(chatId, num_opcao)
+
                         this.atualizarEstadoChat(chatId, 'filme_especifico')
                     }
 
@@ -344,6 +345,20 @@ class MoviesController {
         await this.enviarMensagem(chatId, mensagem)
     }
 
+    async filmeEscolhido(chatId, num_opcao) {
+
+        const filmeDesejado = await this.requests.filmeEscolhido(objUsuario)
+
+        
+
+        //TODO: for para apresentar as informações do filme
+        idfilme = this.estados[chatId].filmes[num_opcao][2]
+
+        let mensagem = `Ótima escolha! Fique com algumas informações sobre este filme:\n\n${idfilme}`
+
+        await this.enviarMensagem(chatId, mensagem)
+    }
+
     /**
      * Verifica se o horario atual em relação ao ultimo horario de conversa com o usuario ultrapassou o timeout definido
      */
@@ -375,6 +390,8 @@ class MoviesController {
             horario: moment().format('DD/MM/YYYY HH:mm:ss')
         }
     }
+
+    
 }
 
 

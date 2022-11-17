@@ -53,6 +53,14 @@ class RequestsController {
 
         return filmes?.results ? filmes.results.slice(outras_opcoes, maximo_filmes + outras_opcoes) : []
     }
+
+    async filmeEscolhido(objUsuario) {
+
+        let movie_id = objUsuario?.movie_id
+
+        filme = await this.get(`/movie/${movie_id}`,)
+        
+    }
 }
 
 
