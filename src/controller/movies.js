@@ -124,6 +124,9 @@ class MoviesController {
                 // apresenta recomendacoes de filmes pelo genero escolhido e data 
                 if (this.estados[chatId]?.estado === 'filmes_por_data_genero') {
 
+                    this.estados[chatId].pagina = 1
+                    this.estados[chatId].outras_opcoes = 0
+
                     const dados = {
                         genero: this.estados[chatId]?.genero,
                         ano_lancamento: this.estados[chatId]?.ano_lancamento
@@ -152,6 +155,7 @@ class MoviesController {
                     else if (num_opcao <= qntd_filmes) {
 
                         // TODO: buscar sobre o filme especifico
+                        
                         this.atualizarEstadoChat(chatId, 'filme_especifico')
                     }
 
@@ -166,8 +170,15 @@ class MoviesController {
                     // quer ver mais opcoes de filmes para o genêro e data escolhidos
                     else {
 
-                        // TODO: buscar mais opcoes de filmes
-                        this.atualizarEstadoChat(chatId, 'filmes_por_data_genero')
+                        this.estados[chatId].outras_opcoes += 3
+
+                        const dados = {
+                            genero: this.estados[chatId]?.genero,
+                            ano_lancamento: this.estados[chatId]?.ano_lancamento
+                        }
+
+                        await this.filmesPorGeneroData(chatId, dados, this.estados[chatId])
+                        this.atualizarEstadoChat(chatId, 'interesse_usuario')
                     }
                 }
 
@@ -182,11 +193,9 @@ class MoviesController {
 
             // continuar com filme_especifico e filmes_por_data_genero do interesse_usuario
 
-            // TODO: Delay entre as mensagens
+
 
             // informa as opcoes:
-            // - intervalo entre duas datas - ano especifico 
-            // retorna 3 filmes dessa data em ordem de popularidade
             // pergunta se algum desses é do interesse
             // se sim apresenta dados daquele filme:
 
@@ -199,9 +208,6 @@ class MoviesController {
             //plataforma disponivel
 
             // se nao apresenta pergunta o que deseja fazer: ver outros ou procurar outro genero
-
-
-            //Em seguida haverá a resposta do bot, onde está presente o que foi solicitado acima
 
             //Juntamente com a informações de onde podemos assistir (plataformas)
         })
@@ -314,9 +320,9 @@ class MoviesController {
     /**
      * Apresenta uma lista de filmes recomendados de acordo com o genero e data escolhida
      */
-    async filmesPorGeneroData(chatId, dados) {
+    async filmesPorGeneroData(chatId, dados, objUsuario) {
 
-        const filmes = await this.requests.buscarPorGeneroData(dados.genero, dados.ano_lancamento)
+        const filmes = await this.requests.buscarPorGeneroData(dados.genero, dados.ano_lancamento, objUsuario)
 
         let mensagem = `Encontrei alguns filmes com maior popularidade para esse gênero e ano de lançamento escolhidos:\n\n`
 
