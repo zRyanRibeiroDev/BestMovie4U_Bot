@@ -92,11 +92,13 @@ class MoviesController {
                 // valida a data escolhida e a confirma
                 else if (this.estados[chatId]?.estado === 'buscar_por_data') {
 
+                    const moment = require('moment')
+
                     const regex = /\d{4}/
                     const match = regex.exec(texto) || 0
 
                     const ano_lancamento = parseInt(match[0])
-                    const ano_atual = new Date(Date.now()).getFullYear()
+                    const ano_atual = moment().year()
 
                     // nao encontrou o ano de lancamento devido erro ou ser maior que o atual ou preenchimento incorreto do usuario
                     if (isNaN(ano_lancamento) || ano_lancamento > ano_atual || ano_lancamento <= 0)
@@ -153,10 +155,8 @@ class MoviesController {
 
                     // quer ver sobre um filme especifico
                     else if (num_opcao <= qntd_filmes) {
-                        
-                        // TODO: buscar sobre o filme especifico
-                        await this.filmeEscolhido(chatId, num_opcao)
 
+                        await this.buscarFilmeEscolhido(chatId, num_opcao)
                         this.atualizarEstadoChat(chatId, 'filme_especifico')
                     }
 
@@ -192,25 +192,16 @@ class MoviesController {
 
             } while (this.estados[chatId]?.estado === 'filmes_por_data_genero')
 
-            // continuar com filme_especifico e filmes_por_data_genero do interesse_usuario
+            // apresenta o filme escolhido pelo usuário
+            if (this.estados[chatId]?.estado === 'filme_especifico') {
 
+                const filme = this.estados[chatId]?.filme
 
+                await this.apresentarFilme(chatId, filme)
+                this.atualizarEstadoChat(chatId, 'solicitar_avaliacao')
+            }
 
-            // informa as opcoes:
-            // pergunta se algum desses é do interesse
-            // se sim apresenta dados daquele filme:
-
-            //Breve sinopse 
-            //Nota da crítica
-            //Elenco
-            //Faixa etária
-            //Possui premiações
-            //diretor
-            //plataforma disponivel
-
-            // se nao apresenta pergunta o que deseja fazer: ver outros ou procurar outro genero
-
-            //Juntamente com a informações de onde podemos assistir (plataformas)
+            // continuar com solicitar_avaliacao
         })
     }
 
@@ -288,7 +279,6 @@ class MoviesController {
     async perguntarData(chatId) {
 
         await this.enviarMensagem(chatId, 'Insira o ano de lançamento desejado para as recomendações de filmes daquela data.')
-
     }
 
     /**
@@ -345,16 +335,35 @@ class MoviesController {
         await this.enviarMensagem(chatId, mensagem)
     }
 
-    async filmeEscolhido(chatId, num_opcao) {
+    /**
+     * Busca o filme escolhido de acordo com a opção que o usuário forneceu
+     */
+    async buscarFilmeEscolhido(chatId, num_opcao) {
 
-        const filmeDesejado = await this.requests.filmeEscolhido(objUsuario)
+        const idFilme = this.estados[chatId].filmes[num_opcao - 1]
 
-        
+        this.estados[chatId].filme = await this.requests.filmeEscolhido(idFilme)
 
-        //TODO: for para apresentar as informações do filme
-        idfilme = this.estados[chatId].filmes[num_opcao][2]
+        await this.enviarMensagem(chatId, `Só um momento, estou buscando os dados do filme!`)
+    }
 
-        let mensagem = `Ótima escolha! Fique com algumas informações sobre este filme:\n\n${idfilme}`
+    /**
+     * Apresenta o filme escolhido
+     */
+    async apresentarFilme(chatId, filme) {
+
+        let mensagem = `Achei os seguintes dados sobre o filme que você escolheu:\n\n`
+
+        for (const propriedade in filme) {
+
+            // se for um array e tiver algum elemento, ira apresentar eles juntos separados por virgula
+            if (Array.isArray(filme[propriedade]) && filme[propriedade].length > 0)
+                mensagem += `${propriedade}: ${filme[propriedade].join(', ')}\n\n`
+
+            // verifica se a propriedade possui alguma informação para exibi-la
+            else if (!Array.isArray(filme[propriedade]) && filme[propriedade] !== '' && filme[propriedade] !== undefined)
+                mensagem += `${propriedade}: ${filme[propriedade]}\n\n`
+        }
 
         await this.enviarMensagem(chatId, mensagem)
     }
@@ -390,8 +399,6 @@ class MoviesController {
             horario: moment().format('DD/MM/YYYY HH:mm:ss')
         }
     }
-
-    
 }
 
 

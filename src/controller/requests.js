@@ -54,12 +54,31 @@ class RequestsController {
         return filmes?.results ? filmes.results.slice(outras_opcoes, maximo_filmes + outras_opcoes) : []
     }
 
-    async filmeEscolhido(objUsuario) {
+    /**
+     * Pega os dados do filme escolhido pelo usuario de acordo com o id do filme
+     */
+    async filmeEscolhido(idFilme) {
 
-        let movie_id = objUsuario?.movie_id
+        const moment = require('moment')
 
-        filme = await this.get(`/movie/${movie_id}`,)
-        
+        const filme = await this.get(`/movie/${idFilme}`)
+        const providers = await this.get(`/movie/${idFilme}/watch/providers`)
+
+        let provedores = []
+
+        if (providers?.results?.BR?.flatrate !== undefined) {
+
+            for (const provedor of providers?.results?.BR?.flatrate)
+                provedores.push(provedor.provider_name)
+        }
+
+        return {
+            Nome: `"${filme?.title}"`,
+            Sinopse: filme?.overview ? `"${filme?.overview}"` : undefined,
+            Nota: filme?.vote_average ? filme.vote_average.toFixed(1) : undefined,
+            'Lançamento': filme?.release_date ? moment(filme.release_date, "YYYY-MM-DD").format("DD/MM/YYYY") : undefined,
+            'Plataforma(s) disponível(is)': provedores
+        }
     }
 }
 
