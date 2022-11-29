@@ -13,13 +13,20 @@ class RequestsController {
      */
     async pegarGeneros(generos) {
 
-        if (generos.length === 0) {
+        try {
 
-            const mensagens = await this.get('/genre/movie/list')
-            generos = mensagens?.genres || generos
+            if (generos.length === 0) {
+
+                const mensagens = await this.get('/genre/movie/list')
+                generos = mensagens?.genres || generos
+            }
+
+            return generos
+
+        } catch (e) {
+
+            console.log(e)
         }
-
-        return generos
     }
 
     /**
@@ -27,31 +34,38 @@ class RequestsController {
      */
     async buscarPorGeneroData(genero, data, objUsuario) {
 
-        const maximo_filmes = 3
+        try {
 
-        let pagina = objUsuario?.pagina || 1
-        let outras_opcoes = objUsuario?.outras_opcoes || 0
-        let filmes, verif
+            const maximo_filmes = 3
 
-        do {
+            let pagina = objUsuario?.pagina || 1
+            let outras_opcoes = objUsuario?.outras_opcoes || 0
+            let filmes, verif
 
-            filmes = await this.get(`/discover/movie`, `sort_by=popularity.desc&include_adult=false&include_video=false&page=${pagina}&with_genres=${genero}&primary_release_year=${data}`)
+            do {
 
-            verif = maximo_filmes + outras_opcoes > filmes?.results.length
+                filmes = await this.get(`/discover/movie`, `sort_by=popularity.desc&include_adult=false&include_video=false&page=${pagina}&with_genres=${genero}&primary_release_year=${data}`)
 
-            // incrementa a pagina caso tenha utilizado todos os resultados da pagina atual
-            if (verif) {
+                verif = maximo_filmes + outras_opcoes > filmes?.results.length
 
-                objUsuario.pagina++
-                pagina = objUsuario.pagina
+                // incrementa a pagina caso tenha utilizado todos os resultados da pagina atual
+                if (verif) {
 
-                objUsuario.outras_opcoes = 0
-                outras_opcoes = objUsuario.outras_opcoes
-            }
+                    objUsuario.pagina++
+                    pagina = objUsuario.pagina
 
-        } while (verif)
+                    objUsuario.outras_opcoes = 0
+                    outras_opcoes = objUsuario.outras_opcoes
+                }
 
-        return filmes?.results ? filmes.results.slice(outras_opcoes, maximo_filmes + outras_opcoes) : []
+            } while (verif)
+
+            return filmes?.results ? filmes.results.slice(outras_opcoes, maximo_filmes + outras_opcoes) : []
+
+        } catch (e) {
+
+            console.log(e)
+        }
     }
 
     /**
@@ -59,25 +73,35 @@ class RequestsController {
      */
     async filmeEscolhido(idFilme) {
 
-        const moment = require('moment')
+        try {
 
-        const filme = await this.get(`/movie/${idFilme}`)
-        const providers = await this.get(`/movie/${idFilme}/watch/providers`)
+            const moment = require('moment')
 
-        let provedores = []
+            const filme = await this.get(`/movie/${idFilme}`)
+            const providers = await this.get(`/movie/${idFilme}/watch/providers`)
 
-        if (providers?.results?.BR?.flatrate !== undefined) {
+            let provedores = []
 
-            for (const provedor of providers?.results?.BR?.flatrate)
-                provedores.push(provedor.provider_name)
-        }
+            if (providers?.results?.BR?.flatrate !== undefined) {
 
-        return {
-            Nome: `"${filme?.title}"`,
-            Sinopse: filme?.overview ? `"${filme?.overview}"` : undefined,
-            Nota: filme?.vote_average ? filme.vote_average.toFixed(1) : undefined,
-            'Lançamento': filme?.release_date ? moment(filme.release_date, "YYYY-MM-DD").format("DD/MM/YYYY") : undefined,
-            'Plataforma(s) disponível(is)': provedores
+                for (const provedor of providers?.results?.BR?.flatrate)
+                    provedores.push(provedor.provider_name)
+            }
+
+            return {
+                dados: {
+                    Nome: `"${filme?.title}"`,
+                    Sinopse: filme?.overview ? `"${filme?.overview}"` : undefined,
+                    Nota: filme?.vote_average ? filme.vote_average.toFixed(1) : undefined,
+                    'Lançamento': filme?.release_date ? moment(filme.release_date, "YYYY-MM-DD").format("DD/MM/YYYY") : undefined,
+                    'Plataforma(s) disponível(is)': provedores
+                },
+                poster: filme?.poster_path ? `https://image.tmdb.org/t/p/w500${filme.poster_path}` : ""
+            }
+
+        } catch (e) {
+
+            console.log(e)
         }
     }
 }

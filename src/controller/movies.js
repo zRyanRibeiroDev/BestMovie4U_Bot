@@ -52,8 +52,6 @@ class MoviesController {
                 // valida o genero escolhido e o confirma
                 else if (this.estados[chatId]?.estado === 'genero_especifico') {
 
-                    // TODO: trocar pros botoes
-
                     const regex = /\d+/
                     const match = regex.exec(texto) || 0
 
@@ -198,10 +196,52 @@ class MoviesController {
                 const filme = this.estados[chatId]?.filme
 
                 await this.apresentarFilme(chatId, filme)
-                this.atualizarEstadoChat(chatId, 'solicitar_avaliacao')
+                this.atualizarEstadoChat(chatId, 'perguntar_continuar')
             }
 
-            // continuar com solicitar_avaliacao
+            do {
+
+                if (this.estados[chatId]?.estado === 'perguntar_continuar') {
+
+                    await this.perguntarSeQuerContinuar(chatId)
+                    this.atualizarEstadoChat(chatId, 'quer_continuar')
+                }
+
+                else if (this.estados[chatId]?.estado === 'quer_continuar') {
+
+                    const regex = /\d+/
+                    const match = regex.exec(texto) || 0
+
+                    const num_opcao = parseInt(match[0])
+
+                    // nao encontrou a opcao desejada devido erro ou preenchimento incorreto do usuario
+                    if (isNaN(num_opcao) || num_opcao > 2 || num_opcao <= 0)
+                        this.atualizarEstadoChat(chatId, 'opcao_menu_invalida')
+
+                    // reinicia busca por outros filmes
+                    else if (num_opcao === 1) {
+
+                        await this.recomecarEscolhaCriterios(chatId)
+                        await this.mostrarGeneros(chatId)
+                        this.atualizarEstadoChat(chatId, 'genero_especifico')
+                    }
+
+                    // encerra e agradece o uso
+                    else {
+
+                        await this.encerrarChat(chatId)
+                        this.atualizarEstadoChat(chatId, undefined)
+                    }
+                }
+
+                // apresenta mensagem de erro caso a opcao tenha sido invalida
+                if (this.estados[chatId]?.estado === 'opcao_menu_invalida') {
+
+                    await this.opcaoInvalida(chatId)
+                    this.atualizarEstadoChat(chatId, 'perguntar_continuar')
+                }
+
+            } while (this.estados[chatId]?.estado === 'perguntar_continuar')
         })
     }
 
@@ -211,6 +251,21 @@ class MoviesController {
     async enviarMensagem(chatId, msg) {
 
         await this.bot.sendMessage(chatId, msg)
+    }
+
+    /**
+     * Envia uma imagem de acordo com o chatId e imagem, legenda opcional
+     */
+    async enviarImagem(chatId, imagem, legenda) {
+
+        try {
+
+            await this.bot.sendPhoto(chatId, imagem, { caption: legenda })
+
+        } catch (e) {
+
+            await this.enviarMensagem(chatId, legenda)
+        }
     }
 
     /**
@@ -227,6 +282,14 @@ class MoviesController {
 
         for (let msg of mensagens)
             await this.enviarMensagem(chatId, msg)
+    }
+
+    /**
+     * Encerra o chat
+     */
+    async encerrarChat(chatId) {
+
+        await this.enviarMensagem(chatId, `Ok, estarei sempre a disposição quando precisar, até a próxima. ;D`)
     }
 
     /**
@@ -271,6 +334,14 @@ class MoviesController {
     async generoInvalido(chatId) {
 
         await this.enviarMensagem(chatId, 'Parece que você digitou um valor incorreto.\n\nIrei mostrar a lista novamente.')
+    }
+
+    /**
+     * Verifica o que o usuário deseja fazer
+     */
+    async perguntarSeQuerContinuar(chatId) {
+
+        await this.enviarMensagem(chatId, `Gostaria de fazer outra busca?\n\n1 - Sim\n2 - Não`)
     }
 
     /**
@@ -354,18 +425,18 @@ class MoviesController {
 
         let mensagem = `Achei os seguintes dados sobre o filme que você escolheu:\n\n`
 
-        for (const propriedade in filme) {
+        for (const propriedade in filme.dados) {
 
             // se for um array e tiver algum elemento, ira apresentar eles juntos separados por virgula
-            if (Array.isArray(filme[propriedade]) && filme[propriedade].length > 0)
-                mensagem += `${propriedade}: ${filme[propriedade].join(', ')}\n\n`
+            if (Array.isArray(filme.dados[propriedade]) && filme.dados[propriedade].length > 0)
+                mensagem += `${propriedade}: ${filme.dados[propriedade].join(', ')}\n\n`
 
             // verifica se a propriedade possui alguma informação para exibi-la
-            else if (!Array.isArray(filme[propriedade]) && filme[propriedade] !== '' && filme[propriedade] !== undefined)
-                mensagem += `${propriedade}: ${filme[propriedade]}\n\n`
+            else if (!Array.isArray(filme.dados[propriedade]) && filme.dados[propriedade] !== '' && filme.dados[propriedade] !== undefined)
+                mensagem += `${propriedade}: ${filme.dados[propriedade]}\n\n`
         }
 
-        await this.enviarMensagem(chatId, mensagem)
+        await this.enviarImagem(chatId, filme.poster, mensagem)
     }
 
     /**
