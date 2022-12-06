@@ -2,7 +2,7 @@
 
 ## Apresentação
 
-Esse Bot possui como objetivo recomendar as melhores opções de filmes desde filmes infantis a filmes de ação e ficção.
+Esse bot possui como objetivo recomendar as melhores opções de filmes desde filmes infantis a filmes de ação e ficção.
 
 ### Programas necessários
 
@@ -22,13 +22,16 @@ Esse Bot possui como objetivo recomendar as melhores opções de filmes desde fi
 - **TelegramBot Api**
   - Biblioteca de ferramentas para o manuseio do bot na rede do Telegram.
   
-### Recursos necessários para o desenvolvimento
+### Recursos utilizados durante o desenvolvimento
+
 - **The Movie Database (TMDB)**
   - Banco de dados de diversos filmes onde conseguimos realizar as requisições necessárias, conseguindo assim as informações desejadas.
 - **BotFather**
   - Ferramenta necessária para a criação do bot na plataforma do Telegram, onde é disponibilizado o token para criação, edições das informações e perfil do bot.
 
-## Instalação
+## Procedimentos
+
+### Instalação
 
 Numa pasta desejada execute o comando abaixo para clonar o projeto.
 ```
@@ -40,16 +43,16 @@ Em seguida, acesse a pasta do repositório clonado e execute o seguinte comando 
 npm install
 ```
 
-## Inicialização
+### Inicialização
 
 Inicie o bot com o comando abaixo.
 ```
 npm run start
 ```
 
-## Instruções
+## Instruções de uso
 1. Após executar a aplicação o usuário pode iniciar o bate-papo com o bot enviando uma mensagem e então começará a interação.
-2. O bot prosseguirá para a coleta das informações necessárias para a busca de recomendações de filmes, sendo eles o gênero e ano de lançamento desejados.
+2. O bot prosseguirá para a coleta das informações necessárias para a busca de recomendações de filmes sendo elas o gênero e ano de lançamento desejados.
 3. Serão apresentados três filmes com as melhores avaliações para o período e gênero selecionados.
 4. O usuário poderá escolher se deseja obter mais informações sobre algum filme específico apresentado, alterar algum parametro ou visualizar mais opções.
 5. Ao escolher um filme poderá ser apresentado informações sobre a escolha feita conforme disponibilidade sendo elas: o poster, nome, breve sinopse, nota, data de lançamento e plataforma(s) disponível(is) para assisti-lo, além de permitir reiniciar a interação ou buscar mais filmes.
